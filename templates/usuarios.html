@@ -1,0 +1,470 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>ChuquiWeb – Gestión de Usuarios</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    body {
+      font-family: 'Segoe UI', sans-serif;
+      background: #F0F4F8;
+      display: flex;
+      min-height: 100vh;
+    }
+
+    /* ── Sidebar ── */
+    .sidebar {
+      width: 220px;
+      background: #1F3864;
+      color: white;
+      display: flex;
+      flex-direction: column;
+      padding: 0;
+      flex-shrink: 0;
+    }
+
+    .sidebar-header {
+      padding: 28px 20px 20px;
+      border-bottom: 1px solid rgba(255,255,255,0.1);
+    }
+
+    .sidebar-header h2 { font-size: 22px; font-weight: 800; letter-spacing: -0.5px; }
+    .sidebar-header p  { font-size: 11px; color: #90CAF9; margin-top: 2px; }
+
+    .nav-item {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 13px 20px;
+      font-size: 14px;
+      color: rgba(255,255,255,0.7);
+      cursor: pointer;
+      transition: background 0.2s;
+      text-decoration: none;
+    }
+
+    .nav-item:hover { background: rgba(255,255,255,0.08); color: white; }
+    .nav-item.active { background: #2E75B6; color: white; }
+
+    .sidebar-footer {
+      margin-top: auto;
+      padding: 16px 20px;
+      border-top: 1px solid rgba(255,255,255,0.1);
+      font-size: 12px;
+      color: #90CAF9;
+    }
+
+    .sidebar-footer strong { display: block; color: white; font-size: 13px; }
+
+    .btn-logout {
+      display: inline-block;
+      margin-top: 10px;
+      padding: 7px 14px;
+      background: rgba(255,255,255,0.1);
+      color: white;
+      border-radius: 6px;
+      font-size: 12px;
+      text-decoration: none;
+      transition: background 0.2s;
+    }
+    .btn-logout:hover { background: rgba(255,255,255,0.2); }
+
+    /* ── Main content ── */
+    .main {
+      flex: 1;
+      padding: 32px;
+      overflow-y: auto;
+    }
+
+    .page-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 24px;
+    }
+
+    .page-header h1 {
+      font-size: 24px;
+      font-weight: 700;
+      color: #1F3864;
+    }
+
+    .page-header p { font-size: 13px; color: #888; margin-top: 2px; }
+
+    /* ── Acciones ── */
+    .actions { display: flex; gap: 10px; margin-bottom: 20px; flex-wrap: wrap; }
+
+    .btn {
+      padding: 10px 20px;
+      border: none;
+      border-radius: 8px;
+      font-size: 13px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: opacity 0.2s, transform 0.1s;
+    }
+    .btn:hover { opacity: 0.88; }
+    .btn:active { transform: scale(0.97); }
+    .btn-primary { background: #1F3864; color: white; }
+    .btn-danger  { background: #C62828; color: white; }
+    .btn-info    { background: #2E75B6; color: white; }
+
+    /* ── Toast ── */
+    #toast {
+      position: fixed;
+      top: 24px; right: 24px;
+      padding: 14px 22px;
+      border-radius: 10px;
+      font-size: 14px;
+      font-weight: 600;
+      color: white;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.3s;
+      z-index: 9999;
+    }
+    #toast.show { opacity: 1; }
+    #toast.ok  { background: #2E7D32; }
+    #toast.err { background: #C62828; }
+
+    /* ── Tabla ── */
+    .table-card {
+      background: white;
+      border-radius: 12px;
+      box-shadow: 0 2px 12px rgba(0,0,0,0.07);
+      overflow: hidden;
+    }
+
+    table { width: 100%; border-collapse: collapse; }
+
+    thead tr { background: #1F3864; }
+    thead th {
+      padding: 14px 16px;
+      text-align: left;
+      font-size: 12px;
+      font-weight: 700;
+      color: white;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+
+    tbody tr {
+      border-bottom: 1px solid #F0F4F8;
+      transition: background 0.15s;
+      cursor: pointer;
+    }
+    tbody tr:hover { background: #EEF4FB; }
+    tbody tr.selected { background: #D6E4F0; }
+    tbody tr:last-child { border-bottom: none; }
+
+    tbody td {
+      padding: 13px 16px;
+      font-size: 13px;
+      color: #333;
+    }
+
+    .badge {
+      display: inline-block;
+      padding: 3px 10px;
+      border-radius: 20px;
+      font-size: 11px;
+      font-weight: 700;
+    }
+    .badge-activo { background: #E8F5E9; color: #2E7D32; }
+    .badge-baja   { background: #FFEBEE; color: #C62828; }
+    .badge-admin  { background: #E3F2FD; color: #1565C0; }
+    .badge-importadora { background: #FFF8E1; color: #F57F17; }
+    .badge-cliente { background: #F3E5F5; color: #6A1B9A; }
+
+    .empty-row td {
+      text-align: center;
+      padding: 40px;
+      color: #AAA;
+      font-size: 14px;
+    }
+
+    /* ── Modal ── */
+    .modal-overlay {
+      display: none;
+      position: fixed;
+      inset: 0;
+      background: rgba(0,0,0,0.45);
+      z-index: 1000;
+      align-items: center;
+      justify-content: center;
+    }
+    .modal-overlay.open { display: flex; }
+
+    .modal {
+      background: white;
+      border-radius: 14px;
+      padding: 36px 32px;
+      width: 100%;
+      max-width: 420px;
+      box-shadow: 0 16px 48px rgba(0,0,0,0.2);
+    }
+
+    .modal h2 {
+      font-size: 20px;
+      color: #1F3864;
+      margin-bottom: 24px;
+      font-weight: 700;
+    }
+
+    .form-group { margin-bottom: 16px; }
+    .form-group label {
+      display: block;
+      font-size: 12px;
+      font-weight: 600;
+      color: #555;
+      margin-bottom: 5px;
+    }
+    .form-group input,
+    .form-group select {
+      width: 100%;
+      padding: 10px 14px;
+      border: 2px solid #E8EDF2;
+      border-radius: 8px;
+      font-size: 14px;
+      outline: none;
+      transition: border-color 0.2s;
+    }
+    .form-group input:focus,
+    .form-group select:focus { border-color: #2E75B6; }
+
+    .modal-error {
+      background: #FFF0F0;
+      border: 1px solid #FFCDD2;
+      border-radius: 6px;
+      padding: 8px 12px;
+      color: #C62828;
+      font-size: 12px;
+      margin-bottom: 14px;
+      display: none;
+    }
+
+    .modal-actions {
+      display: flex;
+      gap: 10px;
+      margin-top: 20px;
+    }
+
+    .btn-cancel {
+      flex: 1;
+      padding: 11px;
+      background: #F0F4F8;
+      color: #555;
+      border: none;
+      border-radius: 8px;
+      font-size: 14px;
+      font-weight: 600;
+      cursor: pointer;
+    }
+    .btn-cancel:hover { background: #E0E8F0; }
+  </style>
+</head>
+<body>
+
+<!-- ── Sidebar ── -->
+<aside class="sidebar">
+  <div class="sidebar-header">
+    <h2>ChuquiWeb</h2>
+    <p>Marketplace de Importadoras</p>
+  </div>
+  <a class="nav-item active" href="/usuarios">👥 Usuarios</a>
+  <a class="nav-item" href="#">🏪 Tiendas</a>
+  <a class="nav-item" href="#">📦 Productos</a>
+  <a class="nav-item" href="#">📊 Estadísticas</a>
+  <div class="sidebar-footer">
+    <strong>{{ nombre_actual }}</strong>
+    {{ rol_actual | upper }}
+    <a class="btn-logout" href="/logout">Cerrar sesión</a>
+  </div>
+</aside>
+
+<!-- ── Main ── -->
+<main class="main">
+  <div class="page-header">
+    <div>
+      <h1>Gestión de Usuarios</h1>
+      <p>{{ usuarios|length }} usuario(s) registrado(s)</p>
+    </div>
+  </div>
+
+  <!-- Acciones -->
+  <div class="actions">
+    <button class="btn btn-primary" onclick="abrirModalAlta()">＋ Alta de Usuario</button>
+    <button class="btn btn-danger"  onclick="darDeBaja()">✕ Dar de Baja</button>
+    <button class="btn btn-info"    onclick="location.reload()">↻ Actualizar</button>
+  </div>
+
+  <!-- Tabla -->
+  <div class="table-card">
+    <table>
+      <thead>
+        <tr>
+          <th>Nombre</th>
+          <th>Correo</th>
+          <th>Rol</th>
+          <th>Estado</th>
+          <th>Fecha Registro</th>
+        </tr>
+      </thead>
+      <tbody id="tabla-body">
+        {% if usuarios %}
+          {% for u in usuarios %}
+          <tr onclick="seleccionar(this, '{{ u.uid }}')"
+              data-uid="{{ u.uid }}"
+              data-activo="{{ 'true' if u.activo else 'false' }}"
+              data-nombre="{{ u.nombre }}">
+            <td>{{ u.nombre }}</td>
+            <td>{{ u.email }}</td>
+            <td><span class="badge badge-{{ u.rol }}">{{ u.rol }}</span></td>
+            <td>
+              {% if u.activo %}
+                <span class="badge badge-activo">Activo</span>
+              {% else %}
+                <span class="badge badge-baja">Baja</span>
+              {% endif %}
+            </td>
+            <td>{{ u.fecha_registro }}</td>
+          </tr>
+          {% endfor %}
+        {% else %}
+          <tr class="empty-row"><td colspan="5">No hay usuarios registrados.</td></tr>
+        {% endif %}
+      </tbody>
+    </table>
+  </div>
+</main>
+
+<!-- ── Toast ── -->
+<div id="toast"></div>
+
+<!-- ── Modal Alta ── -->
+<div class="modal-overlay" id="modal-alta">
+  <div class="modal">
+    <h2>➕ Nuevo Usuario</h2>
+    <div class="modal-error" id="error-alta"></div>
+    <div class="form-group">
+      <label>Nombre completo</label>
+      <input type="text" id="inp-nombre" placeholder="Ej: Juan Pérez"/>
+    </div>
+    <div class="form-group">
+      <label>Correo electrónico</label>
+      <input type="email" id="inp-email" placeholder="usuario@correo.com"/>
+    </div>
+    <div class="form-group">
+      <label>Contraseña</label>
+      <input type="password" id="inp-pass" placeholder="Mínimo 6 caracteres"/>
+    </div>
+    <div class="form-group">
+      <label>Rol</label>
+      <select id="inp-rol">
+        <option value="cliente">Cliente</option>
+        <option value="importadora">Importadora</option>
+        <option value="admin">Admin</option>
+      </select>
+    </div>
+    <div class="modal-actions">
+      <button class="btn-cancel" onclick="cerrarModal()">Cancelar</button>
+      <button class="btn btn-primary" style="flex:1" onclick="crearUsuario()">Crear Usuario</button>
+    </div>
+  </div>
+</div>
+
+<script>
+  let filaSeleccionada = null;
+
+  // ── Selección de fila ──────────────────────────────────
+  function seleccionar(fila, uid) {
+    if (filaSeleccionada) filaSeleccionada.classList.remove('selected');
+    fila.classList.add('selected');
+    filaSeleccionada = fila;
+  }
+
+  // ── Toast ──────────────────────────────────────────────
+  function mostrarToast(msg, tipo) {
+    const t = document.getElementById('toast');
+    t.textContent = msg;
+    t.className = 'show ' + tipo;
+    setTimeout(() => t.className = '', 3000);
+  }
+
+  // ── Modal Alta ─────────────────────────────────────────
+  function abrirModalAlta() {
+    document.getElementById('modal-alta').classList.add('open');
+    document.getElementById('inp-nombre').focus();
+  }
+
+  function cerrarModal() {
+    document.getElementById('modal-alta').classList.remove('open');
+    document.getElementById('error-alta').style.display = 'none';
+    ['inp-nombre','inp-email','inp-pass'].forEach(id => document.getElementById(id).value = '');
+  }
+
+  async function crearUsuario() {
+    const nombre = document.getElementById('inp-nombre').value.trim();
+    const email  = document.getElementById('inp-email').value.trim();
+    const pass   = document.getElementById('inp-pass').value;
+    const rol    = document.getElementById('inp-rol').value;
+    const errDiv = document.getElementById('error-alta');
+
+    if (!nombre || !email || !pass) {
+      errDiv.textContent = 'Por favor completa todos los campos.';
+      errDiv.style.display = 'block';
+      return;
+    }
+
+    const res  = await fetch('/usuarios/alta', {
+      method: 'POST',
+      headers: {'Content-Type': 'application/x-www-form-urlencoded'},
+      body: `nombre=${encodeURIComponent(nombre)}&email=${encodeURIComponent(email)}&password=${encodeURIComponent(pass)}&rol=${rol}`
+    });
+    const data = await res.json();
+
+    if (data.exito) {
+      cerrarModal();
+      mostrarToast('✓ ' + data.mensaje, 'ok');
+      setTimeout(() => location.reload(), 1500);
+    } else {
+      errDiv.textContent = data.mensaje;
+      errDiv.style.display = 'block';
+    }
+  }
+
+  // ── Dar de baja ────────────────────────────────────────
+  async function darDeBaja() {
+    if (!filaSeleccionada) {
+      mostrarToast('Selecciona un usuario primero.', 'err');
+      return;
+    }
+    const uid    = filaSeleccionada.dataset.uid;
+    const nombre = filaSeleccionada.dataset.nombre;
+    const activo = filaSeleccionada.dataset.activo;
+
+    if (activo === 'false') {
+      mostrarToast(`"${nombre}" ya está dado de baja.`, 'err');
+      return;
+    }
+
+    if (!confirm(`¿Dar de baja al usuario "${nombre}"?\nNo podrá iniciar sesión.`)) return;
+
+    const res  = await fetch(`/usuarios/baja/${uid}`, { method: 'POST' });
+    const data = await res.json();
+
+    if (data.exito) {
+      mostrarToast('✓ ' + data.mensaje, 'ok');
+      setTimeout(() => location.reload(), 1500);
+    } else {
+      mostrarToast(data.mensaje, 'err');
+    }
+  }
+
+  // Cerrar modal con Escape
+  document.addEventListener('keydown', e => { if (e.key === 'Escape') cerrarModal(); });
+</script>
+</body>
+</html>
