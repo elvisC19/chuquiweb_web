@@ -8,7 +8,7 @@ from firebase_admin import credentials, firestore
 import os
 import json
 
-FIREBASE_API_KEY = os.environ.get("FIREBASE_API_KEY", "AIzaSyCznNcCoQ7XGMwSOpLHJX-ISBTSxhNA-UA")
+FIREBASE_API_KEY = os.environ.get("FIREBASE_API_KEY", " ")
 FIREBASE_AUTH_URL = "https://identitytoolkit.googleapis.com/v1/accounts"
 
 
