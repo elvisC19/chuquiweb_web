@@ -1,0 +1,942 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>ChuquiWeb · Gestión de Tiendas</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+  <style>
+    /* ── TOKENS ─────────────────────────────────── */
+    :root {
+      --bg:       #0d0f14;
+      --surface:  #161920;
+      --border:   #252933;
+      --accent:   #f0a500;
+      --accent2:  #e05c1a;
+      --text:     #e8eaf0;
+      --muted:    #666e85;
+      --success:  #28c76f;
+      --danger:   #ea5455;
+      --premium:  #a78bfa;
+      --radius:   12px;
+      --transition: 0.2s ease;
+    }
+
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: 'DM Sans', sans-serif;
+      min-height: 100vh;
+      overflow-x: hidden;
+    }
+
+    /* ── HEADER ─────────────────────────────────── */
+    header {
+      background: var(--surface);
+      border-bottom: 1px solid var(--border);
+      padding: 0 2rem;
+      height: 64px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      position: sticky; top: 0; z-index: 100;
+    }
+    .logo {
+      font-family: 'Syne', sans-serif;
+      font-weight: 800;
+      font-size: 1.3rem;
+      letter-spacing: -0.5px;
+    }
+    .logo span { color: var(--accent); }
+    .header-right { display: flex; align-items: center; gap: 1rem; }
+    .badge-admin {
+      background: linear-gradient(135deg, var(--accent), var(--accent2));
+      color: #000;
+      font-size: 0.7rem;
+      font-weight: 700;
+      padding: 3px 10px;
+      border-radius: 20px;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+    }
+    .btn-logout {
+      background: transparent;
+      border: 1px solid var(--border);
+      color: var(--muted);
+      padding: 6px 16px;
+      border-radius: 8px;
+      cursor: pointer;
+      font-size: 0.85rem;
+      transition: var(--transition);
+      text-decoration: none;
+    }
+    .btn-logout:hover { border-color: var(--danger); color: var(--danger); }
+
+    /* ── LAYOUT ─────────────────────────────────── */
+    .container {
+      max-width: 1400px;
+      margin: 0 auto;
+      padding: 2rem;
+    }
+
+    /* ── PAGE HEADER ─────────────────────────────── */
+    .page-header {
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      margin-bottom: 2rem;
+      flex-wrap: wrap;
+      gap: 1rem;
+    }
+    .page-title {
+      font-family: 'Syne', sans-serif;
+      font-size: 2rem;
+      font-weight: 800;
+      line-height: 1;
+    }
+    .page-title small {
+      display: block;
+      font-family: 'DM Sans', sans-serif;
+      font-size: 0.9rem;
+      font-weight: 400;
+      color: var(--muted);
+      margin-top: 4px;
+    }
+
+    /* ── STATS CARDS ─────────────────────────────── */
+    .stats-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+      gap: 1rem;
+      margin-bottom: 2rem;
+    }
+    .stat-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 1.25rem 1.5rem;
+      position: relative;
+      overflow: hidden;
+    }
+    .stat-card::before {
+      content: '';
+      position: absolute;
+      top: 0; left: 0; right: 0;
+      height: 3px;
+    }
+    .stat-card.total::before  { background: var(--accent); }
+    .stat-card.active::before { background: var(--success); }
+    .stat-card.premium::before{ background: var(--premium); }
+    .stat-card.inactive::before { background: var(--muted); }
+    .stat-label { font-size: 0.75rem; color: var(--muted); text-transform: uppercase; letter-spacing: 1px; margin-bottom: 0.5rem; }
+    .stat-value { font-family: 'Syne', sans-serif; font-size: 2rem; font-weight: 800; }
+    .stat-card.total  .stat-value { color: var(--accent); }
+    .stat-card.active .stat-value { color: var(--success); }
+    .stat-card.premium .stat-value { color: var(--premium); }
+
+    /* ── TOOLBAR ─────────────────────────────────── */
+    .toolbar {
+      display: flex;
+      gap: 0.75rem;
+      align-items: center;
+      flex-wrap: wrap;
+      margin-bottom: 1.5rem;
+    }
+    .search-box {
+      flex: 1;
+      min-width: 220px;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 0.6rem 1rem;
+      color: var(--text);
+      font-size: 0.9rem;
+      outline: none;
+      transition: var(--transition);
+    }
+    .search-box:focus { border-color: var(--accent); }
+    .search-box::placeholder { color: var(--muted); }
+
+    select.filter-select {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 0.6rem 1rem;
+      color: var(--text);
+      font-size: 0.85rem;
+      outline: none;
+      cursor: pointer;
+    }
+
+    /* ── BUTTONS ─────────────────────────────────── */
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 0.6rem 1.25rem;
+      border-radius: 8px;
+      font-size: 0.875rem;
+      font-weight: 500;
+      cursor: pointer;
+      border: none;
+      transition: var(--transition);
+      font-family: inherit;
+      white-space: nowrap;
+    }
+    .btn-primary {
+      background: linear-gradient(135deg, var(--accent), var(--accent2));
+      color: #000;
+      font-weight: 700;
+    }
+    .btn-primary:hover { filter: brightness(1.1); transform: translateY(-1px); }
+    .btn-ghost {
+      background: transparent;
+      border: 1px solid var(--border);
+      color: var(--text);
+    }
+    .btn-ghost:hover { border-color: var(--accent); color: var(--accent); }
+    .btn-danger { background: rgba(234,84,85,0.15); color: var(--danger); border: 1px solid rgba(234,84,85,0.3); }
+    .btn-danger:hover { background: rgba(234,84,85,0.3); }
+    .btn-success { background: rgba(40,199,111,0.15); color: var(--success); border: 1px solid rgba(40,199,111,0.3); }
+    .btn-success:hover { background: rgba(40,199,111,0.3); }
+    .btn-sm { padding: 0.35rem 0.75rem; font-size: 0.8rem; }
+
+    /* ── TABLE ─────────────────────────────────── */
+    .table-wrap {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      overflow: hidden;
+    }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+    }
+    thead {
+      background: rgba(255,255,255,0.02);
+      border-bottom: 1px solid var(--border);
+    }
+    th {
+      padding: 0.875rem 1rem;
+      text-align: left;
+      font-family: 'Syne', sans-serif;
+      font-size: 0.75rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      color: var(--muted);
+      white-space: nowrap;
+    }
+    td {
+      padding: 0.875rem 1rem;
+      font-size: 0.875rem;
+      border-bottom: 1px solid rgba(255,255,255,0.04);
+      vertical-align: middle;
+    }
+    tbody tr:last-child td { border-bottom: none; }
+    tbody tr {
+      transition: background var(--transition);
+    }
+    tbody tr:hover { background: rgba(255,255,255,0.02); }
+
+    .tienda-info {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+    }
+    .tienda-avatar {
+      width: 40px; height: 40px;
+      border-radius: 8px;
+      background: linear-gradient(135deg, var(--accent), var(--accent2));
+      display: flex; align-items: center; justify-content: center;
+      font-family: 'Syne', sans-serif;
+      font-weight: 800;
+      font-size: 0.9rem;
+      color: #000;
+      flex-shrink: 0;
+      overflow: hidden;
+    }
+    .tienda-avatar img { width: 100%; height: 100%; object-fit: cover; }
+    .tienda-nombre { font-weight: 600; font-size: 0.9rem; }
+    .tienda-subdominio { font-size: 0.75rem; color: var(--accent); font-family: monospace; }
+
+    .badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      padding: 3px 10px;
+      border-radius: 20px;
+      font-size: 0.72rem;
+      font-weight: 600;
+    }
+    .badge-active   { background: rgba(40,199,111,0.15); color: var(--success); }
+    .badge-inactive { background: rgba(102,110,133,0.2); color: var(--muted); }
+    .badge-premium  { background: rgba(167,139,250,0.15); color: var(--premium); }
+    .badge-basico   { background: rgba(240,165,0,0.12); color: var(--accent); }
+
+    .actions-cell { display: flex; gap: 0.5rem; align-items: center; }
+
+    /* ── EMPTY STATE ─────────────────────────────── */
+    .empty-state {
+      text-align: center;
+      padding: 4rem 2rem;
+      color: var(--muted);
+    }
+    .empty-icon { font-size: 3rem; margin-bottom: 1rem; opacity: 0.4; }
+    .empty-title { font-family: 'Syne', sans-serif; font-size: 1.1rem; margin-bottom: 0.5rem; color: var(--text); }
+
+    /* ── MODAL ─────────────────────────────────── */
+    .modal-overlay {
+      position: fixed; inset: 0;
+      background: rgba(0,0,0,0.75);
+      backdrop-filter: blur(6px);
+      display: flex; align-items: center; justify-content: center;
+      z-index: 1000;
+      padding: 1rem;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.25s ease;
+    }
+    .modal-overlay.open { opacity: 1; pointer-events: all; }
+    .modal {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      width: 100%;
+      max-width: 680px;
+      max-height: 90vh;
+      overflow-y: auto;
+      transform: translateY(20px);
+      transition: transform 0.25s ease;
+    }
+    .modal-overlay.open .modal { transform: translateY(0); }
+    .modal-header {
+      padding: 1.5rem 1.75rem 1rem;
+      border-bottom: 1px solid var(--border);
+      display: flex; align-items: center; justify-content: space-between;
+    }
+    .modal-title {
+      font-family: 'Syne', sans-serif;
+      font-size: 1.2rem;
+      font-weight: 800;
+    }
+    .modal-close {
+      background: none; border: none; color: var(--muted);
+      font-size: 1.4rem; cursor: pointer; line-height: 1;
+      transition: color var(--transition);
+      padding: 4px;
+    }
+    .modal-close:hover { color: var(--text); }
+    .modal-body { padding: 1.5rem 1.75rem; }
+    .modal-footer {
+      padding: 1rem 1.75rem 1.5rem;
+      display: flex; justify-content: flex-end; gap: 0.75rem;
+    }
+
+    /* ── FORM ─────────────────────────────────── */
+    .form-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 1rem;
+    }
+    .form-group { display: flex; flex-direction: column; gap: 0.4rem; }
+    .form-group.full { grid-column: 1 / -1; }
+    label {
+      font-size: 0.78rem;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.8px;
+      color: var(--muted);
+    }
+    input, select, textarea {
+      background: var(--bg);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 0.65rem 0.9rem;
+      color: var(--text);
+      font-size: 0.875rem;
+      font-family: inherit;
+      outline: none;
+      transition: border-color var(--transition);
+      width: 100%;
+    }
+    input:focus, select:focus, textarea:focus { border-color: var(--accent); }
+    textarea { resize: vertical; min-height: 80px; }
+    .form-hint { font-size: 0.72rem; color: var(--muted); }
+
+    /* ── SECTION DIVIDER ─────────────────────────── */
+    .section-divider {
+      grid-column: 1 / -1;
+      display: flex; align-items: center; gap: 0.75rem;
+      margin: 0.5rem 0;
+    }
+    .section-divider span {
+      font-family: 'Syne', sans-serif;
+      font-size: 0.72rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 1.5px;
+      color: var(--accent);
+      white-space: nowrap;
+    }
+    .section-divider::before, .section-divider::after {
+      content: '';
+      flex: 1;
+      height: 1px;
+      background: var(--border);
+    }
+
+    /* ── TOAST ─────────────────────────────────── */
+    #toast {
+      position: fixed;
+      bottom: 2rem; right: 2rem;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 0.875rem 1.25rem;
+      font-size: 0.875rem;
+      max-width: 340px;
+      transform: translateY(20px);
+      opacity: 0;
+      transition: all 0.3s ease;
+      z-index: 9999;
+      display: flex; align-items: center; gap: 0.75rem;
+    }
+    #toast.show { transform: translateY(0); opacity: 1; }
+    #toast.success { border-left: 3px solid var(--success); }
+    #toast.error   { border-left: 3px solid var(--danger); }
+
+    /* ── PLAN TOGGLE ─────────────────────────────── */
+    .plan-toggle {
+      display: flex;
+      gap: 0.5rem;
+    }
+    .plan-opt {
+      flex: 1;
+      padding: 0.5rem;
+      text-align: center;
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      cursor: pointer;
+      font-size: 0.82rem;
+      font-weight: 600;
+      transition: var(--transition);
+    }
+    .plan-opt.selected-basico { border-color: var(--accent); color: var(--accent); background: rgba(240,165,0,0.08); }
+    .plan-opt.selected-premium { border-color: var(--premium); color: var(--premium); background: rgba(167,139,250,0.1); }
+
+    /* ── RESPONSIVE ─────────────────────────────── */
+    @media (max-width: 768px) {
+      .form-grid { grid-template-columns: 1fr; }
+      .form-group.full { grid-column: 1; }
+      .container { padding: 1rem; }
+      .page-title { font-size: 1.5rem; }
+      th:nth-child(3), td:nth-child(3),
+      th:nth-child(5), td:nth-child(5) { display: none; }
+    }
+  </style>
+</head>
+<body>
+
+<!-- ── HEADER ──────────────────────────────── -->
+<header>
+  <div class="logo">Chuqui<span>Web</span></div>
+  <div class="header-right">
+    <span class="badge-admin">Admin</span>
+    <a href="/logout" class="btn-logout">Cerrar sesión</a>
+  </div>
+</header>
+
+<!-- ── MAIN ──────────────────────────────────── -->
+<div class="container">
+
+  <!-- Page Header -->
+  <div class="page-header">
+    <div class="page-title">
+      Gestión de Tiendas
+      <small>Administra las importadoras registradas en la plataforma</small>
+    </div>
+    <button class="btn btn-primary" onclick="abrirModalCrear()">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+      Nueva Tienda
+    </button>
+  </div>
+
+  <!-- Stats -->
+  <div class="stats-grid" id="statsGrid">
+    <div class="stat-card total">
+      <div class="stat-label">Total Tiendas</div>
+      <div class="stat-value" id="statTotal">–</div>
+    </div>
+    <div class="stat-card active">
+      <div class="stat-label">Activas</div>
+      <div class="stat-value" id="statActivas">–</div>
+    </div>
+    <div class="stat-card premium">
+      <div class="stat-label">Plan Premium</div>
+      <div class="stat-value" id="statPremium">–</div>
+    </div>
+    <div class="stat-card inactive">
+      <div class="stat-label">Inactivas</div>
+      <div class="stat-value" id="statInactivas">–</div>
+    </div>
+  </div>
+
+  <!-- Toolbar -->
+  <div class="toolbar">
+    <input type="text" class="search-box" id="searchBox" placeholder="🔍  Buscar tienda, subdominio, categoría..." oninput="filtrarTabla()">
+    <select class="filter-select" id="filtroEstado" onchange="filtrarTabla()">
+      <option value="">Todos los estados</option>
+      <option value="activo">Activas</option>
+      <option value="inactivo">Inactivas</option>
+    </select>
+    <select class="filter-select" id="filtroPlan" onchange="filtrarTabla()">
+      <option value="">Todos los planes</option>
+      <option value="basico">Básico</option>
+      <option value="premium">Premium</option>
+    </select>
+  </div>
+
+  <!-- Tabla -->
+  <div class="table-wrap">
+    <table id="tablaTiendas">
+      <thead>
+        <tr>
+          <th>Tienda</th>
+          <th>Categoría</th>
+          <th>País Origen</th>
+          <th>Plan</th>
+          <th>Estado</th>
+          <th>Registro</th>
+          <th>Acciones</th>
+        </tr>
+      </thead>
+      <tbody id="tbodyTiendas">
+        <tr>
+          <td colspan="7">
+            <div class="empty-state">
+              <div class="empty-icon">🏪</div>
+              <div class="empty-title">Cargando tiendas...</div>
+            </div>
+          </td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+</div><!-- /container -->
+
+
+<!-- ══════════════════════════════════════════════════
+     MODAL: CREAR / EDITAR TIENDA
+══════════════════════════════════════════════════ -->
+<div class="modal-overlay" id="modalTienda">
+  <div class="modal">
+
+    <div class="modal-header">
+      <span class="modal-title" id="modalTituloTexto">Nueva Tienda</span>
+      <button class="modal-close" onclick="cerrarModal()">✕</button>
+    </div>
+
+    <div class="modal-body">
+      <form id="formTienda" onsubmit="return false">
+        <input type="hidden" id="f_tienda_id">
+
+        <div class="form-grid">
+
+          <!-- SECCIÓN: Info básica -->
+          <div class="section-divider"><span>Información Básica</span></div>
+
+          <div class="form-group">
+            <label>Nombre de la Tienda *</label>
+            <input type="text" id="f_nombre" placeholder="Ej: Importadora Lider S.A." required>
+          </div>
+
+          <div class="form-group">
+            <label>Subdominio *</label>
+            <input type="text" id="f_subdominio" placeholder="ej: importadora-lider">
+            <span class="form-hint">URL: <b id="previewSubdominio">--</b>.chuquiweb.bo</span>
+          </div>
+
+          <div class="form-group">
+            <label>Categoría *</label>
+            <select id="f_categoria" required>
+              <option value="">-- Seleccionar --</option>
+              {% for cat in categorias %}
+              <option value="{{ cat }}">{{ cat }}</option>
+              {% endfor %}
+            </select>
+          </div>
+
+          <div class="form-group">
+            <label>País de Origen *</label>
+            <select id="f_pais_origen" required>
+              <option value="">-- Seleccionar --</option>
+              {% for pais in paises %}
+              <option value="{{ pais }}">{{ pais }}</option>
+              {% endfor %}
+            </select>
+          </div>
+
+          <div class="form-group full">
+            <label>Descripción Corta *</label>
+            <input type="text" id="f_descripcion" placeholder="Breve descripción de la tienda (mín. 10 caracteres)" required>
+          </div>
+
+          <div class="form-group full">
+            <label>Descripción Larga</label>
+            <textarea id="f_descripcion_larga" placeholder="Descripción detallada, historia, propuesta de valor..."></textarea>
+          </div>
+
+          <!-- SECCIÓN: Contacto -->
+          <div class="section-divider"><span>Contacto</span></div>
+
+          <div class="form-group">
+            <label>Email de Contacto *</label>
+            <input type="email" id="f_email_contacto" placeholder="contacto@tienda.com" required>
+          </div>
+
+          <div class="form-group">
+            <label>Teléfono *</label>
+            <input type="text" id="f_telefono" placeholder="+591 2 2xxxxxx" required>
+          </div>
+
+          <div class="form-group full">
+            <label>Dirección *</label>
+            <input type="text" id="f_direccion" placeholder="Calle, N°, Ciudad" required>
+          </div>
+
+          <div class="form-group">
+            <label>Sitio Web</label>
+            <input type="url" id="f_sitio_web" placeholder="https://...">
+          </div>
+
+          <!-- SECCIÓN: Identidad visual -->
+          <div class="section-divider"><span>Identidad Visual</span></div>
+
+          <div class="form-group">
+            <label>URL del Logo</label>
+            <input type="url" id="f_logo_url" placeholder="https://...logo.png">
+          </div>
+
+          <div class="form-group">
+            <label>URL del Banner</label>
+            <input type="url" id="f_banner_url" placeholder="https://...banner.jpg">
+          </div>
+
+          <!-- SECCIÓN: Plan -->
+          <div class="section-divider"><span>Plan de Suscripción</span></div>
+
+          <div class="form-group full">
+            <label>Plan *</label>
+            <div class="plan-toggle">
+              <div class="plan-opt" id="opt_basico" onclick="seleccionarPlan('basico')">⚡ Básico</div>
+              <div class="plan-opt" id="opt_premium" onclick="seleccionarPlan('premium')">👑 Premium</div>
+            </div>
+            <input type="hidden" id="f_plan" value="basico">
+          </div>
+
+        </div>
+      </form>
+    </div>
+
+    <div class="modal-footer">
+      <button class="btn btn-ghost" onclick="cerrarModal()">Cancelar</button>
+      <button class="btn btn-primary" id="btnGuardar" onclick="guardarTienda()">
+        Guardar Tienda
+      </button>
+    </div>
+
+  </div>
+</div>
+
+<!-- TOAST -->
+<div id="toast"></div>
+
+
+<!-- ══════════════════════════════════════════════════
+     JAVASCRIPT
+══════════════════════════════════════════════════ -->
+<script>
+  let todasLasTiendas = [];
+  let modoEdicion = false;
+
+  // ── INIT ──────────────────────────────────────────
+  document.addEventListener("DOMContentLoaded", () => {
+    cargarTiendas();
+
+    // Preview subdominio en tiempo real
+    document.getElementById("f_subdominio").addEventListener("input", function () {
+      const slug = slugify(this.value);
+      document.getElementById("previewSubdominio").textContent = slug || "--";
+    });
+
+    // Cerrar modal al click en overlay
+    document.getElementById("modalTienda").addEventListener("click", function (e) {
+      if (e.target === this) cerrarModal();
+    });
+
+    // Seleccionar plan por defecto
+    seleccionarPlan("basico");
+  });
+
+  // ── CARGAR TIENDAS ────────────────────────────────
+  async function cargarTiendas() {
+    try {
+      const res = await fetch("/api/tiendas");
+      const data = await res.json();
+      todasLasTiendas = Array.isArray(data) ? data : [];
+      renderTabla(todasLasTiendas);
+      actualizarStats(todasLasTiendas);
+    } catch (err) {
+      mostrarEmptyState("Error al cargar las tiendas.");
+    }
+  }
+
+  // ── RENDER TABLA ──────────────────────────────────
+  function renderTabla(tiendas) {
+    const tbody = document.getElementById("tbodyTiendas");
+    if (!tiendas.length) {
+      tbody.innerHTML = `<tr><td colspan="7">
+        <div class="empty-state">
+          <div class="empty-icon">🏪</div>
+          <div class="empty-title">No se encontraron tiendas</div>
+        </div></td></tr>`;
+      return;
+    }
+
+    tbody.innerHTML = tiendas.map(t => {
+      const inicial = (t.nombre || "?").charAt(0).toUpperCase();
+      const logoHTML = t.logo_url
+        ? `<img src="${escHtml(t.logo_url)}" alt="logo" onerror="this.style.display='none'">`
+        : inicial;
+
+      const estadoBadge = t.activo
+        ? `<span class="badge badge-active">● Activa</span>`
+        : `<span class="badge badge-inactive">● Inactiva</span>`;
+
+      const planBadge = t.plan === "premium"
+        ? `<span class="badge badge-premium">👑 Premium</span>`
+        : `<span class="badge badge-basico">⚡ Básico</span>`;
+
+      const btnEstado = t.activo
+        ? `<button class="btn btn-sm btn-danger" onclick="cambiarEstado('${t.tienda_id}', false)">Desactivar</button>`
+        : `<button class="btn btn-sm btn-success" onclick="cambiarEstado('${t.tienda_id}', true)">Activar</button>`;
+
+      return `
+        <tr>
+          <td>
+            <div class="tienda-info">
+              <div class="tienda-avatar">${logoHTML}</div>
+              <div>
+                <div class="tienda-nombre">${escHtml(t.nombre)}</div>
+                <div class="tienda-subdominio">${escHtml(t.subdominio)}.chuquiweb.bo</div>
+              </div>
+            </div>
+          </td>
+          <td>${escHtml(t.categoria)}</td>
+          <td>${escHtml(t.pais_origen)}</td>
+          <td>${planBadge}</td>
+          <td>${estadoBadge}</td>
+          <td style="color:var(--muted);font-size:0.8rem">${t.fecha_registro ? t.fecha_registro.split(" ")[0] : "–"}</td>
+          <td>
+            <div class="actions-cell">
+              <button class="btn btn-sm btn-ghost" onclick="abrirModalEditar(${JSON.stringify(t).replace(/"/g, '&quot;')})">Editar</button>
+              ${btnEstado}
+            </div>
+          </td>
+        </tr>`;
+    }).join("");
+  }
+
+  // ── STATS ─────────────────────────────────────────
+  function actualizarStats(tiendas) {
+    document.getElementById("statTotal").textContent    = tiendas.length;
+    document.getElementById("statActivas").textContent  = tiendas.filter(t => t.activo).length;
+    document.getElementById("statPremium").textContent  = tiendas.filter(t => t.plan === "premium").length;
+    document.getElementById("statInactivas").textContent = tiendas.filter(t => !t.activo).length;
+  }
+
+  // ── FILTRAR ───────────────────────────────────────
+  function filtrarTabla() {
+    const q       = document.getElementById("searchBox").value.toLowerCase();
+    const estado  = document.getElementById("filtroEstado").value;
+    const plan    = document.getElementById("filtroPlan").value;
+
+    const filtradas = todasLasTiendas.filter(t => {
+      const matchQ = !q || [t.nombre, t.subdominio, t.categoria, t.pais_origen]
+        .some(v => (v || "").toLowerCase().includes(q));
+      const matchEstado = !estado || (estado === "activo" ? t.activo : !t.activo);
+      const matchPlan   = !plan || t.plan === plan;
+      return matchQ && matchEstado && matchPlan;
+    });
+
+    renderTabla(filtradas);
+    actualizarStats(filtradas);
+  }
+
+  // ── MODAL ─────────────────────────────────────────
+  function abrirModalCrear() {
+    modoEdicion = false;
+    document.getElementById("modalTituloTexto").textContent = "Nueva Tienda";
+    document.getElementById("btnGuardar").textContent = "Guardar Tienda";
+    limpiarFormulario();
+    document.getElementById("modalTienda").classList.add("open");
+  }
+
+  function abrirModalEditar(tienda) {
+    modoEdicion = true;
+    document.getElementById("modalTituloTexto").textContent = "Editar Tienda";
+    document.getElementById("btnGuardar").textContent = "Actualizar";
+
+    // Rellenar campos
+    document.getElementById("f_tienda_id").value         = tienda.tienda_id;
+    document.getElementById("f_nombre").value            = tienda.nombre || "";
+    document.getElementById("f_subdominio").value        = tienda.subdominio || "";
+    document.getElementById("f_categoria").value         = tienda.categoria || "";
+    document.getElementById("f_pais_origen").value       = tienda.pais_origen || "";
+    document.getElementById("f_descripcion").value       = tienda.descripcion || "";
+    document.getElementById("f_descripcion_larga").value = tienda.descripcion_larga || "";
+    document.getElementById("f_email_contacto").value    = tienda.email_contacto || "";
+    document.getElementById("f_telefono").value          = tienda.telefono || "";
+    document.getElementById("f_direccion").value         = tienda.direccion || "";
+    document.getElementById("f_sitio_web").value         = tienda.sitio_web || "";
+    document.getElementById("f_logo_url").value          = tienda.logo_url || "";
+    document.getElementById("f_banner_url").value        = tienda.banner_url || "";
+    document.getElementById("previewSubdominio").textContent = tienda.subdominio || "--";
+    seleccionarPlan(tienda.plan || "basico");
+
+    document.getElementById("modalTienda").classList.add("open");
+  }
+
+  function cerrarModal() {
+    document.getElementById("modalTienda").classList.remove("open");
+  }
+
+  function limpiarFormulario() {
+    ["f_tienda_id","f_nombre","f_subdominio","f_descripcion","f_descripcion_larga",
+     "f_email_contacto","f_telefono","f_direccion","f_sitio_web","f_logo_url","f_banner_url"]
+      .forEach(id => document.getElementById(id).value = "");
+    document.getElementById("f_categoria").value = "";
+    document.getElementById("f_pais_origen").value = "";
+    document.getElementById("previewSubdominio").textContent = "--";
+    seleccionarPlan("basico");
+  }
+
+  // ── PLAN TOGGLE ───────────────────────────────────
+  function seleccionarPlan(plan) {
+    document.getElementById("f_plan").value = plan;
+    document.getElementById("opt_basico").className  = "plan-opt" + (plan === "basico"   ? " selected-basico"  : "");
+    document.getElementById("opt_premium").className = "plan-opt" + (plan === "premium"  ? " selected-premium" : "");
+  }
+
+  // ── GUARDAR ───────────────────────────────────────
+  async function guardarTienda() {
+    const payload = {
+      nombre:            v("f_nombre"),
+      subdominio:        v("f_subdominio"),
+      logo_url:          v("f_logo_url"),
+      descripcion:       v("f_descripcion"),
+      descripcion_larga: v("f_descripcion_larga"),
+      categoria:         v("f_categoria"),
+      pais_origen:       v("f_pais_origen"),
+      email_contacto:    v("f_email_contacto"),
+      telefono:          v("f_telefono"),
+      direccion:         v("f_direccion"),
+      sitio_web:         v("f_sitio_web"),
+      banner_url:        v("f_banner_url"),
+      plan:              v("f_plan"),
+    };
+
+    // Validación mínima client-side
+    if (!payload.nombre || !payload.subdominio || !payload.descripcion ||
+        !payload.categoria || !payload.pais_origen || !payload.email_contacto ||
+        !payload.telefono || !payload.direccion) {
+      toast("Completa todos los campos obligatorios (*)", "error");
+      return;
+    }
+
+    const tiendaId = v("f_tienda_id");
+    const url    = modoEdicion ? `/api/tiendas/${tiendaId}` : "/api/tiendas";
+    const method = modoEdicion ? "PUT" : "POST";
+
+    try {
+      const res  = await fetch(url, {
+        method,
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload),
+      });
+      const data = await res.json();
+
+      if (res.ok) {
+        toast(data.mensaje || "Operación exitosa", "success");
+        cerrarModal();
+        cargarTiendas();
+      } else {
+        toast(data.error || "Error al guardar", "error");
+      }
+    } catch (err) {
+      toast("Error de conexión", "error");
+    }
+  }
+
+  // ── CAMBIAR ESTADO ────────────────────────────────
+  async function cambiarEstado(tiendaId, activar) {
+    const endpoint = activar ? "activar" : "desactivar";
+    const accion   = activar ? "activar" : "desactivar";
+    if (!confirm(`¿Seguro que deseas ${accion} esta tienda?`)) return;
+
+    try {
+      const res  = await fetch(`/api/tiendas/${tiendaId}/${endpoint}`, { method: "PATCH" });
+      const data = await res.json();
+      if (res.ok) {
+        toast(data.mensaje, "success");
+        cargarTiendas();
+      } else {
+        toast(data.error, "error");
+      }
+    } catch {
+      toast("Error de conexión", "error");
+    }
+  }
+
+  // ── HELPERS ───────────────────────────────────────
+  function v(id) { return document.getElementById(id).value.trim(); }
+
+  function escHtml(str) {
+    return String(str || "")
+      .replace(/&/g, "&amp;").replace(/</g, "&lt;")
+      .replace(/>/g, "&gt;").replace(/"/g, "&quot;");
+  }
+
+  function slugify(texto) {
+    return texto.toLowerCase()
+      .normalize("NFD").replace(/[\u0300-\u036f]/g, "")
+      .replace(/[^\w\s-]/g, "")
+      .replace(/[\s_]+/g, "-")
+      .replace(/-+/g, "-")
+      .trim().replace(/^-+|-+$/g, "");
+  }
+
+  function mostrarEmptyState(msg) {
+    document.getElementById("tbodyTiendas").innerHTML =
+      `<tr><td colspan="7"><div class="empty-state">
+        <div class="empty-icon">⚠️</div>
+        <div class="empty-title">${msg}</div>
+      </div></td></tr>`;
+  }
+
+  let toastTimer;
+  function toast(msg, tipo = "success") {
+    const el = document.getElementById("toast");
+    el.textContent = (tipo === "success" ? "✅ " : "❌ ") + msg;
+    el.className = `show ${tipo}`;
+    clearTimeout(toastTimer);
+    toastTimer = setTimeout(() => { el.className = ""; }, 3500);
+  }
+</script>
+</body>
+</html>

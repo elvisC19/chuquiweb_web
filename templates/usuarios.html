@@ -3,468 +3,585 @@
 <head>
   <meta charset="UTF-8"/>
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>ChuquiWeb – Gestión de Usuarios</title>
+  <title>ChuquiWeb · Gestión de Usuarios</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
   <style>
-    * { margin: 0; padding: 0; box-sizing: border-box; }
+    :root {
+      --bg: #0d0f14; --surface: #161920; --border: #252933;
+      --accent: #f0a500; --accent2: #e05c1a;
+      --text: #e8eaf0; --muted: #666e85;
+      --success: #28c76f; --danger: #ea5455; --warning: #ff9f43;
+      --radius: 12px; --transition: 0.2s ease;
+    }
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
     body {
-      font-family: 'Segoe UI', sans-serif;
-      background: #F0F4F8;
-      display: flex;
+      background: var(--bg); color: var(--text);
+      font-family: 'DM Sans', sans-serif;
       min-height: 100vh;
     }
 
-    /* ── Sidebar ── */
-    .sidebar {
-      width: 220px;
-      background: #1F3864;
-      color: white;
-      display: flex;
-      flex-direction: column;
-      padding: 0;
-      flex-shrink: 0;
+    /* ── HEADER ── */
+    header {
+      background: var(--surface); border-bottom: 1px solid var(--border);
+      padding: 0 2rem; height: 64px;
+      display: flex; align-items: center; justify-content: space-between;
+      position: sticky; top: 0; z-index: 100;
     }
-
-    .sidebar-header {
-      padding: 28px 20px 20px;
-      border-bottom: 1px solid rgba(255,255,255,0.1);
+    .logo { font-family: 'Syne', sans-serif; font-weight: 800; font-size: 1.3rem; }
+    .logo span { color: var(--accent); }
+    .badge-admin {
+      background: linear-gradient(135deg, var(--accent), var(--accent2));
+      color: #000; font-size: 0.7rem; font-weight: 700;
+      padding: 3px 10px; border-radius: 20px;
+      text-transform: uppercase; letter-spacing: 1px;
     }
-
-    .sidebar-header h2 { font-size: 22px; font-weight: 800; letter-spacing: -0.5px; }
-    .sidebar-header p  { font-size: 11px; color: #90CAF9; margin-top: 2px; }
-
-    .nav-item {
-      display: flex;
-      align-items: center;
-      gap: 10px;
-      padding: 13px 20px;
-      font-size: 14px;
-      color: rgba(255,255,255,0.7);
-      cursor: pointer;
-      transition: background 0.2s;
-      text-decoration: none;
-    }
-
-    .nav-item:hover { background: rgba(255,255,255,0.08); color: white; }
-    .nav-item.active { background: #2E75B6; color: white; }
-
-    .sidebar-footer {
-      margin-top: auto;
-      padding: 16px 20px;
-      border-top: 1px solid rgba(255,255,255,0.1);
-      font-size: 12px;
-      color: #90CAF9;
-    }
-
-    .sidebar-footer strong { display: block; color: white; font-size: 13px; }
-
     .btn-logout {
-      display: inline-block;
-      margin-top: 10px;
-      padding: 7px 14px;
-      background: rgba(255,255,255,0.1);
-      color: white;
-      border-radius: 6px;
-      font-size: 12px;
-      text-decoration: none;
-      transition: background 0.2s;
+      background: transparent; border: 1px solid var(--border); color: var(--muted);
+      padding: 6px 16px; border-radius: 8px; cursor: pointer; font-size: 0.85rem;
+      transition: var(--transition); text-decoration: none;
     }
-    .btn-logout:hover { background: rgba(255,255,255,0.2); }
+    .btn-logout:hover { border-color: var(--danger); color: var(--danger); }
 
-    /* ── Main content ── */
-    .main {
-      flex: 1;
-      padding: 32px;
-      overflow-y: auto;
-    }
+    /* ── LAYOUT ── */
+    .container { max-width: 1200px; margin: 0 auto; padding: 2rem; }
 
     .page-header {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      margin-bottom: 24px;
+      display: flex; align-items: flex-start; justify-content: space-between;
+      margin-bottom: 2rem; flex-wrap: wrap; gap: 1rem;
+    }
+    .page-title { font-family: 'Syne', sans-serif; font-size: 2rem; font-weight: 800; }
+    .page-title small {
+      display: block; font-family: 'DM Sans', sans-serif;
+      font-size: 0.9rem; font-weight: 400; color: var(--muted); margin-top: 4px;
     }
 
-    .page-header h1 {
-      font-size: 24px;
-      font-weight: 700;
-      color: #1F3864;
+    /* ── STATS ── */
+    .stats-grid {
+      display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+      gap: 1rem; margin-bottom: 2rem;
+    }
+    .stat-card {
+      background: var(--surface); border: 1px solid var(--border);
+      border-radius: var(--radius); padding: 1.2rem 1.4rem;
+      position: relative; overflow: hidden;
+    }
+    .stat-card::before { content: ''; position: absolute; top: 0; left: 0; right: 0; height: 3px; }
+    .stat-card.total::before   { background: var(--accent); }
+    .stat-card.admins::before  { background: var(--accent2); }
+    .stat-card.import::before  { background: #3b82f6; }
+    .stat-card.clientes::before{ background: var(--success); }
+    .stat-label { font-size: 0.72rem; color: var(--muted); text-transform: uppercase; letter-spacing: 1px; margin-bottom: 0.4rem; }
+    .stat-value { font-family: 'Syne', sans-serif; font-size: 1.8rem; font-weight: 800; }
+    .stat-card.total   .stat-value { color: var(--accent); }
+    .stat-card.admins  .stat-value { color: var(--accent2); }
+    .stat-card.import  .stat-value { color: #3b82f6; }
+    .stat-card.clientes .stat-value { color: var(--success); }
+
+    /* ── TOOLBAR ── */
+    .toolbar { display: flex; gap: 0.75rem; margin-bottom: 1.5rem; flex-wrap: wrap; }
+    .search-box {
+      flex: 1; min-width: 200px; background: var(--surface); border: 1px solid var(--border);
+      border-radius: 8px; padding: 0.6rem 1rem; color: var(--text); font-size: 0.9rem; outline: none;
+    }
+    .search-box:focus { border-color: var(--accent); }
+    .search-box::placeholder { color: var(--muted); }
+    select.filter-select {
+      background: var(--surface); border: 1px solid var(--border);
+      border-radius: 8px; padding: 0.6rem 1rem; color: var(--text); font-size: 0.85rem; outline: none;
     }
 
-    .page-header p { font-size: 13px; color: #888; margin-top: 2px; }
-
-    /* ── Acciones ── */
-    .actions { display: flex; gap: 10px; margin-bottom: 20px; flex-wrap: wrap; }
-
+    /* ── BUTTONS ── */
     .btn {
-      padding: 10px 20px;
-      border: none;
-      border-radius: 8px;
-      font-size: 13px;
-      font-weight: 600;
-      cursor: pointer;
-      transition: opacity 0.2s, transform 0.1s;
+      display: inline-flex; align-items: center; gap: 6px;
+      padding: 0.6rem 1.25rem; border-radius: 8px;
+      font-size: 0.875rem; font-weight: 500; cursor: pointer; border: none;
+      transition: var(--transition); font-family: inherit; white-space: nowrap;
     }
-    .btn:hover { opacity: 0.88; }
-    .btn:active { transform: scale(0.97); }
-    .btn-primary { background: #1F3864; color: white; }
-    .btn-danger  { background: #C62828; color: white; }
-    .btn-info    { background: #2E75B6; color: white; }
+    .btn-primary { background: linear-gradient(135deg, var(--accent), var(--accent2)); color: #000; font-weight: 700; }
+    .btn-primary:hover { filter: brightness(1.1); transform: translateY(-1px); }
+    .btn-ghost { background: transparent; border: 1px solid var(--border); color: var(--text); }
+    .btn-ghost:hover { border-color: var(--accent); color: var(--accent); }
+    .btn-danger { background: rgba(234,84,85,0.15); color: var(--danger); border: 1px solid rgba(234,84,85,0.3); }
+    .btn-danger:hover { background: rgba(234,84,85,0.3); }
+    .btn-success { background: rgba(40,199,111,0.15); color: var(--success); border: 1px solid rgba(40,199,111,0.3); }
+    .btn-success:hover { background: rgba(40,199,111,0.3); }
+    .btn-edit { background: rgba(240,165,0,0.12); color: var(--accent); border: 1px solid rgba(240,165,0,0.3); }
+    .btn-edit:hover { background: rgba(240,165,0,0.25); }
+    .btn-sm { padding: 0.35rem 0.75rem; font-size: 0.8rem; }
 
-    /* ── Toast ── */
-    #toast {
-      position: fixed;
-      top: 24px; right: 24px;
-      padding: 14px 22px;
-      border-radius: 10px;
-      font-size: 14px;
-      font-weight: 600;
-      color: white;
-      opacity: 0;
-      pointer-events: none;
-      transition: opacity 0.3s;
-      z-index: 9999;
+    /* ── TABLE ── */
+    .table-wrap {
+      background: var(--surface); border: 1px solid var(--border);
+      border-radius: var(--radius); overflow: hidden;
     }
-    #toast.show { opacity: 1; }
-    #toast.ok  { background: #2E7D32; }
-    #toast.err { background: #C62828; }
-
-    /* ── Tabla ── */
-    .table-card {
-      background: white;
-      border-radius: 12px;
-      box-shadow: 0 2px 12px rgba(0,0,0,0.07);
-      overflow: hidden;
-    }
-
     table { width: 100%; border-collapse: collapse; }
-
-    thead tr { background: #1F3864; }
-    thead th {
-      padding: 14px 16px;
-      text-align: left;
-      font-size: 12px;
-      font-weight: 700;
-      color: white;
-      text-transform: uppercase;
-      letter-spacing: 0.5px;
+    thead { background: rgba(255,255,255,0.02); border-bottom: 1px solid var(--border); }
+    th {
+      padding: 0.875rem 1rem; text-align: left;
+      font-family: 'Syne', sans-serif; font-size: 0.72rem; font-weight: 700;
+      text-transform: uppercase; letter-spacing: 1px; color: var(--muted); white-space: nowrap;
     }
-
-    tbody tr {
-      border-bottom: 1px solid #F0F4F8;
-      transition: background 0.15s;
-      cursor: pointer;
+    td {
+      padding: 0.875rem 1rem; font-size: 0.875rem;
+      border-bottom: 1px solid rgba(255,255,255,0.04); vertical-align: middle;
     }
-    tbody tr:hover { background: #EEF4FB; }
-    tbody tr.selected { background: #D6E4F0; }
-    tbody tr:last-child { border-bottom: none; }
+    tbody tr:last-child td { border-bottom: none; }
+    tbody tr:hover { background: rgba(255,255,255,0.02); }
 
-    tbody td {
-      padding: 13px 16px;
-      font-size: 13px;
-      color: #333;
+    .user-info { display: flex; align-items: center; gap: 0.75rem; }
+    .user-avatar {
+      width: 36px; height: 36px; border-radius: 50%;
+      background: linear-gradient(135deg, var(--accent), var(--accent2));
+      display: flex; align-items: center; justify-content: center;
+      font-family: 'Syne', sans-serif; font-weight: 800; font-size: 0.85rem; color: #000;
+      flex-shrink: 0;
     }
+    .user-name { font-weight: 600; font-size: 0.875rem; }
+    .user-email { font-size: 0.75rem; color: var(--muted); }
 
     .badge {
-      display: inline-block;
-      padding: 3px 10px;
-      border-radius: 20px;
-      font-size: 11px;
-      font-weight: 700;
+      display: inline-flex; align-items: center; gap: 4px;
+      padding: 3px 10px; border-radius: 20px; font-size: 0.72rem; font-weight: 600;
     }
-    .badge-activo { background: #E8F5E9; color: #2E7D32; }
-    .badge-baja   { background: #FFEBEE; color: #C62828; }
-    .badge-admin  { background: #E3F2FD; color: #1565C0; }
-    .badge-importadora { background: #FFF8E1; color: #F57F17; }
-    .badge-cliente { background: #F3E5F5; color: #6A1B9A; }
+    .badge-admin  { background: rgba(224,92,26,0.15); color: var(--accent2); }
+    .badge-import { background: rgba(59,130,246,0.15); color: #3b82f6; }
+    .badge-client { background: rgba(40,199,111,0.15); color: var(--success); }
+    .badge-active   { background: rgba(40,199,111,0.12); color: var(--success); }
+    .badge-inactive { background: rgba(102,110,133,0.2); color: var(--muted); }
 
-    .empty-row td {
-      text-align: center;
-      padding: 40px;
-      color: #AAA;
-      font-size: 14px;
-    }
+    .actions-cell { display: flex; gap: 0.4rem; }
 
-    /* ── Modal ── */
+    /* ── MODAL ── */
     .modal-overlay {
-      display: none;
-      position: fixed;
-      inset: 0;
-      background: rgba(0,0,0,0.45);
-      z-index: 1000;
-      align-items: center;
-      justify-content: center;
+      position: fixed; inset: 0; background: rgba(0,0,0,0.75);
+      backdrop-filter: blur(6px); display: flex; align-items: center; justify-content: center;
+      z-index: 1000; padding: 1rem; opacity: 0; pointer-events: none; transition: opacity 0.25s;
     }
-    .modal-overlay.open { display: flex; }
-
+    .modal-overlay.open { opacity: 1; pointer-events: all; }
     .modal {
-      background: white;
-      border-radius: 14px;
-      padding: 36px 32px;
-      width: 100%;
-      max-width: 420px;
-      box-shadow: 0 16px 48px rgba(0,0,0,0.2);
+      background: var(--surface); border: 1px solid var(--border); border-radius: 16px;
+      width: 100%; max-width: 520px; max-height: 90vh; overflow-y: auto;
+      transform: translateY(20px); transition: transform 0.25s;
+    }
+    .modal-overlay.open .modal { transform: translateY(0); }
+    .modal-header {
+      padding: 1.5rem 1.75rem 1rem; border-bottom: 1px solid var(--border);
+      display: flex; align-items: center; justify-content: space-between;
+    }
+    .modal-title { font-family: 'Syne', sans-serif; font-size: 1.2rem; font-weight: 800; }
+    .modal-close {
+      background: none; border: none; color: var(--muted);
+      font-size: 1.4rem; cursor: pointer; padding: 4px; line-height: 1;
+    }
+    .modal-close:hover { color: var(--text); }
+    .modal-body { padding: 1.5rem 1.75rem; display: flex; flex-direction: column; gap: 1rem; }
+    .modal-footer {
+      padding: 1rem 1.75rem 1.5rem; display: flex; justify-content: flex-end; gap: 0.75rem;
     }
 
-    .modal h2 {
-      font-size: 20px;
-      color: #1F3864;
-      margin-bottom: 24px;
-      font-weight: 700;
+    /* ── FORM ── */
+    .form-group { display: flex; flex-direction: column; gap: 0.4rem; }
+    label {
+      font-size: 0.75rem; font-weight: 600;
+      text-transform: uppercase; letter-spacing: 0.8px; color: var(--muted);
+    }
+    input, select {
+      background: var(--bg); border: 1px solid var(--border); border-radius: 8px;
+      padding: 0.65rem 0.9rem; color: var(--text); font-size: 0.875rem;
+      font-family: inherit; outline: none; transition: border-color var(--transition); width: 100%;
+    }
+    input:focus, select:focus { border-color: var(--accent); }
+    .form-hint { font-size: 0.72rem; color: var(--muted); }
+
+    /* Aviso edición email */
+    .alert-info {
+      background: rgba(240,165,0,0.08); border: 1px solid rgba(240,165,0,0.2);
+      border-radius: 8px; padding: 0.65rem 0.9rem;
+      font-size: 0.8rem; color: var(--accent); line-height: 1.5;
     }
 
-    .form-group { margin-bottom: 16px; }
-    .form-group label {
-      display: block;
-      font-size: 12px;
-      font-weight: 600;
-      color: #555;
-      margin-bottom: 5px;
-    }
-    .form-group input,
-    .form-group select {
-      width: 100%;
-      padding: 10px 14px;
-      border: 2px solid #E8EDF2;
-      border-radius: 8px;
-      font-size: 14px;
-      outline: none;
-      transition: border-color 0.2s;
-    }
-    .form-group input:focus,
-    .form-group select:focus { border-color: #2E75B6; }
+    /* ── MODAL CREAR ── */
+    #modalCrear .modal { max-width: 460px; }
 
-    .modal-error {
-      background: #FFF0F0;
-      border: 1px solid #FFCDD2;
-      border-radius: 6px;
-      padding: 8px 12px;
-      color: #C62828;
-      font-size: 12px;
-      margin-bottom: 14px;
-      display: none;
+    /* ── TOAST ── */
+    #toast {
+      position: fixed; bottom: 2rem; right: 2rem;
+      background: var(--surface); border: 1px solid var(--border);
+      border-radius: 10px; padding: 0.875rem 1.25rem; font-size: 0.875rem;
+      max-width: 340px; transform: translateY(20px); opacity: 0;
+      transition: all 0.3s; z-index: 9999;
     }
+    #toast.show { transform: translateY(0); opacity: 1; }
+    #toast.success { border-left: 3px solid var(--success); }
+    #toast.error   { border-left: 3px solid var(--danger); }
 
-    .modal-actions {
-      display: flex;
-      gap: 10px;
-      margin-top: 20px;
-    }
+    /* ── EMPTY ── */
+    .empty-state { text-align: center; padding: 4rem 2rem; color: var(--muted); }
+    .empty-icon  { font-size: 3rem; margin-bottom: 1rem; opacity: 0.4; }
+    .empty-title { font-family: 'Syne', sans-serif; font-size: 1.1rem; color: var(--text); }
 
-    .btn-cancel {
-      flex: 1;
-      padding: 11px;
-      background: #F0F4F8;
-      color: #555;
-      border: none;
-      border-radius: 8px;
-      font-size: 14px;
-      font-weight: 600;
-      cursor: pointer;
+    @media (max-width: 768px) {
+      .container { padding: 1rem; }
+      .page-title { font-size: 1.5rem; }
+      th:nth-child(4), td:nth-child(4) { display: none; }
     }
-    .btn-cancel:hover { background: #E0E8F0; }
   </style>
 </head>
 <body>
 
-<!-- ── Sidebar ── -->
-<aside class="sidebar">
-  <div class="sidebar-header">
-    <h2>ChuquiWeb</h2>
-    <p>Marketplace de Importadoras</p>
+<header>
+  <div class="logo">Chuqui<span>Web</span></div>
+  <div style="display:flex;align-items:center;gap:1rem">
+    <span class="badge-admin">Admin</span>
+    <a href="/logout" class="btn-logout">Cerrar sesión</a>
   </div>
-  <a class="nav-item active" href="/usuarios">👥 Usuarios</a>
-  <a class="nav-item" href="#">🏪 Tiendas</a>
-  <a class="nav-item" href="#">📦 Productos</a>
-  <a class="nav-item" href="#">📊 Estadísticas</a>
-  <div class="sidebar-footer">
-    <strong>{{ nombre_actual }}</strong>
-    {{ rol_actual | upper }}
-    <a class="btn-logout" href="/logout">Cerrar sesión</a>
-  </div>
-</aside>
+</header>
 
-<!-- ── Main ── -->
-<main class="main">
+<div class="container">
+
   <div class="page-header">
-    <div>
-      <h1>Gestión de Usuarios</h1>
-      <p>{{ usuarios|length }} usuario(s) registrado(s)</p>
+    <div class="page-title">
+      Gestión de Usuarios
+      <small>Administra cuentas, roles y accesos de la plataforma</small>
     </div>
+    <button class="btn btn-primary" onclick="abrirModalCrear()">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+      Nuevo Usuario
+    </button>
   </div>
 
-  <!-- Acciones -->
-  <div class="actions">
-    <button class="btn btn-primary" onclick="abrirModalAlta()">＋ Alta de Usuario</button>
-    <button class="btn btn-danger"  onclick="darDeBaja()">✕ Dar de Baja</button>
-    <button class="btn btn-info"    onclick="location.reload()">↻ Actualizar</button>
+  <!-- Stats -->
+  <div class="stats-grid">
+    <div class="stat-card total"><div class="stat-label">Total</div><div class="stat-value" id="sTotal">–</div></div>
+    <div class="stat-card admins"><div class="stat-label">Admins</div><div class="stat-value" id="sAdmin">–</div></div>
+    <div class="stat-card import"><div class="stat-label">Importadoras</div><div class="stat-value" id="sImport">–</div></div>
+    <div class="stat-card clientes"><div class="stat-label">Clientes</div><div class="stat-value" id="sCliente">–</div></div>
+  </div>
+
+  <!-- Toolbar -->
+  <div class="toolbar">
+    <input type="text" class="search-box" id="searchBox" placeholder="🔍  Buscar por nombre o email..." oninput="filtrar()">
+    <select class="filter-select" id="filtroRol" onchange="filtrar()">
+      <option value="">Todos los roles</option>
+      <option value="admin">Admin</option>
+      <option value="importadora">Importadora</option>
+      <option value="cliente">Cliente</option>
+    </select>
+    <select class="filter-select" id="filtroEstado" onchange="filtrar()">
+      <option value="">Todos los estados</option>
+      <option value="activo">Activos</option>
+      <option value="inactivo">Inactivos</option>
+    </select>
   </div>
 
   <!-- Tabla -->
-  <div class="table-card">
+  <div class="table-wrap">
     <table>
       <thead>
         <tr>
-          <th>Nombre</th>
-          <th>Correo</th>
+          <th>Usuario</th>
           <th>Rol</th>
           <th>Estado</th>
-          <th>Fecha Registro</th>
+          <th>Registro</th>
+          <th>Acciones</th>
         </tr>
       </thead>
-      <tbody id="tabla-body">
-        {% if usuarios %}
-          {% for u in usuarios %}
-          <tr onclick="seleccionar(this, '{{ u.uid }}')"
-              data-uid="{{ u.uid }}"
-              data-activo="{{ 'true' if u.activo else 'false' }}"
-              data-nombre="{{ u.nombre }}">
-            <td>{{ u.nombre }}</td>
-            <td>{{ u.email }}</td>
-            <td><span class="badge badge-{{ u.rol }}">{{ u.rol }}</span></td>
-            <td>
-              {% if u.activo %}
-                <span class="badge badge-activo">Activo</span>
-              {% else %}
-                <span class="badge badge-baja">Baja</span>
-              {% endif %}
-            </td>
-            <td>{{ u.fecha_registro }}</td>
-          </tr>
-          {% endfor %}
-        {% else %}
-          <tr class="empty-row"><td colspan="5">No hay usuarios registrados.</td></tr>
-        {% endif %}
+      <tbody id="tbodyUsuarios">
+        <tr><td colspan="5"><div class="empty-state"><div class="empty-icon">👤</div><div class="empty-title">Cargando usuarios...</div></div></td></tr>
       </tbody>
     </table>
   </div>
-</main>
 
-<!-- ── Toast ── -->
-<div id="toast"></div>
+</div><!-- /container -->
 
-<!-- ── Modal Alta ── -->
-<div class="modal-overlay" id="modal-alta">
+
+<!-- ════════════════════════════════
+     MODAL CREAR USUARIO
+════════════════════════════════ -->
+<div class="modal-overlay" id="modalCrear">
   <div class="modal">
-    <h2>➕ Nuevo Usuario</h2>
-    <div class="modal-error" id="error-alta"></div>
-    <div class="form-group">
-      <label>Nombre completo</label>
-      <input type="text" id="inp-nombre" placeholder="Ej: Juan Pérez"/>
+    <div class="modal-header">
+      <span class="modal-title">Nuevo Usuario</span>
+      <button class="modal-close" onclick="cerrarModalCrear()">✕</button>
     </div>
-    <div class="form-group">
-      <label>Correo electrónico</label>
-      <input type="email" id="inp-email" placeholder="usuario@correo.com"/>
+    <div class="modal-body">
+      <div class="form-group">
+        <label>Nombre completo *</label>
+        <input type="text" id="c_nombre" placeholder="Ej: Juan Pérez">
+      </div>
+      <div class="form-group">
+        <label>Email *</label>
+        <input type="email" id="c_email" placeholder="usuario@ejemplo.com">
+      </div>
+      <div class="form-group">
+        <label>Contraseña *</label>
+        <input type="password" id="c_password" placeholder="Mínimo 6 caracteres">
+      </div>
+      <div class="form-group">
+        <label>Rol *</label>
+        <select id="c_rol">
+          {% for r in roles %}
+          <option value="{{ r }}">{{ r | capitalize }}</option>
+          {% endfor %}
+        </select>
+      </div>
     </div>
-    <div class="form-group">
-      <label>Contraseña</label>
-      <input type="password" id="inp-pass" placeholder="Mínimo 6 caracteres"/>
-    </div>
-    <div class="form-group">
-      <label>Rol</label>
-      <select id="inp-rol">
-        <option value="cliente">Cliente</option>
-        <option value="importadora">Importadora</option>
-        <option value="admin">Admin</option>
-      </select>
-    </div>
-    <div class="modal-actions">
-      <button class="btn-cancel" onclick="cerrarModal()">Cancelar</button>
-      <button class="btn btn-primary" style="flex:1" onclick="crearUsuario()">Crear Usuario</button>
+    <div class="modal-footer">
+      <button class="btn btn-ghost" onclick="cerrarModalCrear()">Cancelar</button>
+      <button class="btn btn-primary" onclick="crearUsuario()">Crear Usuario</button>
     </div>
   </div>
 </div>
 
+
+<!-- ════════════════════════════════
+     MODAL EDITAR USUARIO  ← NUEVO
+════════════════════════════════ -->
+<div class="modal-overlay" id="modalEditar">
+  <div class="modal">
+    <div class="modal-header">
+      <span class="modal-title">Editar Usuario</span>
+      <button class="modal-close" onclick="cerrarModalEditar()">✕</button>
+    </div>
+    <div class="modal-body">
+      <input type="hidden" id="e_uid">
+
+      <div class="form-group">
+        <label>Nombre completo</label>
+        <input type="text" id="e_nombre" placeholder="Nombre completo">
+      </div>
+
+      <div class="form-group">
+        <label>Email</label>
+        <input type="email" id="e_email" placeholder="correo@ejemplo.com">
+        <div class="alert-info" style="margin-top:6px">
+          ⚠️ Cambiar el email actualiza también Firebase Authentication.
+          El usuario deberá usar el nuevo email para iniciar sesión.
+        </div>
+      </div>
+
+      <div class="form-group">
+        <label>Nueva contraseña <span style="color:var(--muted);font-size:0.7rem;text-transform:none">(dejar vacío para no cambiar)</span></label>
+        <input type="password" id="e_password" placeholder="Mínimo 6 caracteres">
+      </div>
+
+      <div class="form-group">
+        <label>Rol</label>
+        <select id="e_rol">
+          {% for r in roles %}
+          <option value="{{ r }}">{{ r | capitalize }}</option>
+          {% endfor %}
+        </select>
+      </div>
+
+      <div class="form-group">
+        <label>Estado</label>
+        <select id="e_activo">
+          <option value="true">✅ Activo</option>
+          <option value="false">⛔ Inactivo</option>
+        </select>
+      </div>
+
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-ghost" onclick="cerrarModalEditar()">Cancelar</button>
+      <button class="btn btn-primary" onclick="guardarEdicion()">Guardar Cambios</button>
+    </div>
+  </div>
+</div>
+
+
+<!-- TOAST -->
+<div id="toast"></div>
+
+
 <script>
-  let filaSeleccionada = null;
+  let todosUsuarios = [];
 
-  // ── Selección de fila ──────────────────────────────────
-  function seleccionar(fila, uid) {
-    if (filaSeleccionada) filaSeleccionada.classList.remove('selected');
-    fila.classList.add('selected');
-    filaSeleccionada = fila;
+  // ── INIT ──
+  document.addEventListener("DOMContentLoaded", () => {
+    cargarUsuarios();
+    // Cerrar modales al click en overlay
+    ["modalCrear","modalEditar"].forEach(id => {
+      document.getElementById(id).addEventListener("click", function(e) {
+        if (e.target === this) this.classList.remove("open");
+      });
+    });
+  });
+
+  // ── CARGAR ──
+  async function cargarUsuarios() {
+    try {
+      const res  = await fetch("/api/usuarios");
+      const data = await res.json();
+      todosUsuarios = Array.isArray(data) ? data : [];
+      renderTabla(todosUsuarios);
+      actualizarStats(todosUsuarios);
+    } catch {
+      document.getElementById("tbodyUsuarios").innerHTML =
+        `<tr><td colspan="5"><div class="empty-state"><div class="empty-icon">⚠️</div><div class="empty-title">Error al cargar</div></div></td></tr>`;
+    }
   }
 
-  // ── Toast ──────────────────────────────────────────────
-  function mostrarToast(msg, tipo) {
-    const t = document.getElementById('toast');
-    t.textContent = msg;
-    t.className = 'show ' + tipo;
-    setTimeout(() => t.className = '', 3000);
+  // ── RENDER ──
+  function renderTabla(usuarios) {
+    const tbody = document.getElementById("tbodyUsuarios");
+    if (!usuarios.length) {
+      tbody.innerHTML = `<tr><td colspan="5">
+        <div class="empty-state"><div class="empty-icon">👤</div>
+        <div class="empty-title">No se encontraron usuarios</div></div></td></tr>`;
+      return;
+    }
+    tbody.innerHTML = usuarios.map(u => {
+      const inicial    = (u.nombre || "?").charAt(0).toUpperCase();
+      const rolBadge   = {
+        admin:       `<span class="badge badge-admin">🛡 Admin</span>`,
+        importadora: `<span class="badge badge-import">🏪 Importadora</span>`,
+        cliente:     `<span class="badge badge-client">👤 Cliente</span>`,
+      }[u.rol] || `<span class="badge">${esc(u.rol)}</span>`;
+
+      const estadoBadge = u.activo
+        ? `<span class="badge badge-active">● Activo</span>`
+        : `<span class="badge badge-inactive">● Inactivo</span>`;
+
+      const btnEstado = u.activo
+        ? `<button class="btn btn-sm btn-danger" onclick="cambiarEstado('${u.uid}', false)">Desactivar</button>`
+        : `<button class="btn btn-sm btn-success" onclick="cambiarEstado('${u.uid}', true)">Activar</button>`;
+
+      return `<tr>
+        <td>
+          <div class="user-info">
+            <div class="user-avatar">${esc(inicial)}</div>
+            <div>
+              <div class="user-name">${esc(u.nombre)}</div>
+              <div class="user-email">${esc(u.email)}</div>
+            </div>
+          </div>
+        </td>
+        <td>${rolBadge}</td>
+        <td>${estadoBadge}</td>
+        <td style="color:var(--muted);font-size:0.8rem">${u.fecha_registro ? u.fecha_registro.split(" ")[0] : "–"}</td>
+        <td>
+          <div class="actions-cell">
+            <button class="btn btn-sm btn-edit" onclick='abrirModalEditar(${JSON.stringify(u).replace(/"/g,"&quot;")})'>Editar</button>
+            ${btnEstado}
+          </div>
+        </td>
+      </tr>`;
+    }).join("");
   }
 
-  // ── Modal Alta ─────────────────────────────────────────
-  function abrirModalAlta() {
-    document.getElementById('modal-alta').classList.add('open');
-    document.getElementById('inp-nombre').focus();
+  // ── STATS ──
+  function actualizarStats(usuarios) {
+    document.getElementById("sTotal").textContent  = usuarios.length;
+    document.getElementById("sAdmin").textContent  = usuarios.filter(u => u.rol === "admin").length;
+    document.getElementById("sImport").textContent = usuarios.filter(u => u.rol === "importadora").length;
+    document.getElementById("sCliente").textContent= usuarios.filter(u => u.rol === "cliente").length;
   }
 
-  function cerrarModal() {
-    document.getElementById('modal-alta').classList.remove('open');
-    document.getElementById('error-alta').style.display = 'none';
-    ['inp-nombre','inp-email','inp-pass'].forEach(id => document.getElementById(id).value = '');
+  // ── FILTRAR ──
+  function filtrar() {
+    const q  = document.getElementById("searchBox").value.toLowerCase();
+    const r  = document.getElementById("filtroRol").value;
+    const e  = document.getElementById("filtroEstado").value;
+    const f  = todosUsuarios.filter(u => {
+      const mq = !q || [u.nombre, u.email].some(v => (v||"").toLowerCase().includes(q));
+      const mr = !r || u.rol === r;
+      const me = !e || (e === "activo" ? u.activo : !u.activo);
+      return mq && mr && me;
+    });
+    renderTabla(f);
+    actualizarStats(f);
   }
+
+  // ── MODAL CREAR ──
+  function abrirModalCrear() {
+    ["c_nombre","c_email","c_password"].forEach(id => document.getElementById(id).value = "");
+    document.getElementById("c_rol").value = "cliente";
+    document.getElementById("modalCrear").classList.add("open");
+  }
+  function cerrarModalCrear() { document.getElementById("modalCrear").classList.remove("open"); }
 
   async function crearUsuario() {
-    const nombre = document.getElementById('inp-nombre').value.trim();
-    const email  = document.getElementById('inp-email').value.trim();
-    const pass   = document.getElementById('inp-pass').value;
-    const rol    = document.getElementById('inp-rol').value;
-    const errDiv = document.getElementById('error-alta');
-
-    if (!nombre || !email || !pass) {
-      errDiv.textContent = 'Por favor completa todos los campos.';
-      errDiv.style.display = 'block';
-      return;
+    const payload = {
+      nombre:   document.getElementById("c_nombre").value.trim(),
+      email:    document.getElementById("c_email").value.trim(),
+      password: document.getElementById("c_password").value,
+      rol:      document.getElementById("c_rol").value,
+    };
+    if (!payload.nombre || !payload.email || !payload.password) {
+      toast("Completa todos los campos.", "error"); return;
     }
-
-    const res  = await fetch('/usuarios/alta', {
-      method: 'POST',
-      headers: {'Content-Type': 'application/x-www-form-urlencoded'},
-      body: `nombre=${encodeURIComponent(nombre)}&email=${encodeURIComponent(email)}&password=${encodeURIComponent(pass)}&rol=${rol}`
-    });
-    const data = await res.json();
-
-    if (data.exito) {
-      cerrarModal();
-      mostrarToast('✓ ' + data.mensaje, 'ok');
-      setTimeout(() => location.reload(), 1500);
-    } else {
-      errDiv.textContent = data.mensaje;
-      errDiv.style.display = 'block';
-    }
+    try {
+      const res  = await fetch("/api/usuarios", {
+        method: "POST", headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload),
+      });
+      const data = await res.json();
+      if (res.ok) { toast(data.mensaje, "success"); cerrarModalCrear(); cargarUsuarios(); }
+      else         { toast(data.error, "error"); }
+    } catch { toast("Error de conexión", "error"); }
   }
 
-  // ── Dar de baja ────────────────────────────────────────
-  async function darDeBaja() {
-    if (!filaSeleccionada) {
-      mostrarToast('Selecciona un usuario primero.', 'err');
-      return;
-    }
-    const uid    = filaSeleccionada.dataset.uid;
-    const nombre = filaSeleccionada.dataset.nombre;
-    const activo = filaSeleccionada.dataset.activo;
+  // ── MODAL EDITAR ──
+  function abrirModalEditar(usuario) {
+    document.getElementById("e_uid").value    = usuario.uid;
+    document.getElementById("e_nombre").value = usuario.nombre || "";
+    document.getElementById("e_email").value  = usuario.email  || "";
+    document.getElementById("e_password").value = "";           // siempre vacío
+    document.getElementById("e_rol").value    = usuario.rol    || "cliente";
+    document.getElementById("e_activo").value = usuario.activo ? "true" : "false";
+    document.getElementById("modalEditar").classList.add("open");
+  }
+  function cerrarModalEditar() { document.getElementById("modalEditar").classList.remove("open"); }
 
-    if (activo === 'false') {
-      mostrarToast(`"${nombre}" ya está dado de baja.`, 'err');
-      return;
-    }
+  async function guardarEdicion() {
+    const uid = document.getElementById("e_uid").value;
+    const payload = {
+      nombre:   document.getElementById("e_nombre").value.trim()   || undefined,
+      email:    document.getElementById("e_email").value.trim()    || undefined,
+      password: document.getElementById("e_password").value.trim() || undefined,
+      rol:      document.getElementById("e_rol").value             || undefined,
+      activo:   document.getElementById("e_activo").value === "true",
+    };
+    // Eliminar undefined
+    Object.keys(payload).forEach(k => payload[k] === undefined && delete payload[k]);
 
-    if (!confirm(`¿Dar de baja al usuario "${nombre}"?\nNo podrá iniciar sesión.`)) return;
-
-    const res  = await fetch(`/usuarios/baja/${uid}`, { method: 'POST' });
-    const data = await res.json();
-
-    if (data.exito) {
-      mostrarToast('✓ ' + data.mensaje, 'ok');
-      setTimeout(() => location.reload(), 1500);
-    } else {
-      mostrarToast(data.mensaje, 'err');
-    }
+    try {
+      const res  = await fetch(`/api/usuarios/${uid}`, {
+        method: "PUT", headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload),
+      });
+      const data = await res.json();
+      if (res.ok) { toast(data.mensaje, "success"); cerrarModalEditar(); cargarUsuarios(); }
+      else         { toast(data.error, "error"); }
+    } catch { toast("Error de conexión", "error"); }
   }
 
-  // Cerrar modal con Escape
-  document.addEventListener('keydown', e => { if (e.key === 'Escape') cerrarModal(); });
+  // ── CAMBIAR ESTADO ──
+  async function cambiarEstado(uid, activar) {
+    if (!confirm(`¿${activar ? "Activar" : "Desactivar"} este usuario?`)) return;
+    const ep  = activar ? "activar" : "desactivar";
+    const res = await fetch(`/api/usuarios/${uid}/${ep}`, { method: "PATCH" });
+    const d   = await res.json();
+    if (res.ok) { toast(d.mensaje, "success"); cargarUsuarios(); }
+    else         { toast(d.error, "error"); }
+  }
+
+  // ── HELPERS ──
+  function esc(s) {
+    return String(s||"").replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;");
+  }
+  let _t;
+  function toast(msg, tipo = "success") {
+    const el = document.getElementById("toast");
+    el.textContent = (tipo === "success" ? "✅ " : "❌ ") + msg;
+    el.className = `show ${tipo}`;
+    clearTimeout(_t);
+    _t = setTimeout(() => el.className = "", 3500);
+  }
 </script>
 </body>
 </html>

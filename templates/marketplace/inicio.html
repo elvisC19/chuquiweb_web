@@ -1,0 +1,181 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>ChuquiWeb · Marketplace de Importadoras Bolivia</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Syne:wght@700;800&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg: #0d0f14; --surface: #161920; --border: #252933;
+      --accent: #f0a500; --accent2: #e05c1a;
+      --text: #e8eaf0; --muted: #666e85;
+      --radius: 12px;
+    }
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      background: var(--bg); color: var(--text);
+      font-family: 'DM Sans', sans-serif; min-height: 100vh;
+      background-image:
+        radial-gradient(ellipse 80% 50% at 50% -10%, rgba(240,165,0,0.1), transparent);
+    }
+
+    /* NAVBAR */
+    nav {
+      background: var(--surface); border-bottom: 1px solid var(--border);
+      padding: 0 2rem; height: 64px;
+      display: flex; align-items: center; justify-content: space-between;
+      position: sticky; top: 0; z-index: 100;
+    }
+    .logo { font-family: 'Syne', sans-serif; font-weight: 800; font-size: 1.3rem; }
+    .logo span { color: var(--accent); }
+    .nav-right { display: flex; align-items: center; gap: 1rem; }
+    .nav-user { font-size: 0.85rem; color: var(--muted); }
+    .nav-user strong { color: var(--text); }
+    .btn-nav {
+      padding: 6px 16px; border-radius: 8px; font-size: 0.85rem;
+      font-weight: 600; cursor: pointer; text-decoration: none;
+      border: 1px solid var(--border); color: var(--muted);
+      background: transparent; transition: all 0.2s;
+    }
+    .btn-nav:hover { border-color: var(--accent); color: var(--accent); }
+    .btn-nav.primary {
+      background: linear-gradient(135deg, var(--accent), var(--accent2));
+      color: #000; border: none;
+    }
+    .btn-nav.primary:hover { filter: brightness(1.1); }
+
+    /* HERO */
+    .hero {
+      text-align: center; padding: 5rem 2rem 4rem;
+      max-width: 700px; margin: 0 auto;
+    }
+    .hero-label {
+      display: inline-block;
+      background: rgba(240,165,0,0.12); border: 1px solid rgba(240,165,0,0.25);
+      color: var(--accent); font-size: 0.75rem; font-weight: 700;
+      padding: 4px 14px; border-radius: 20px;
+      text-transform: uppercase; letter-spacing: 1.5px; margin-bottom: 1.5rem;
+    }
+    .hero h1 {
+      font-family: 'Syne', sans-serif; font-size: clamp(2.2rem, 5vw, 3.5rem);
+      font-weight: 800; line-height: 1.1; margin-bottom: 1.25rem;
+    }
+    .hero h1 span {
+      background: linear-gradient(135deg, var(--accent), var(--accent2));
+      -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+    }
+    .hero p { color: var(--muted); font-size: 1.05rem; line-height: 1.6; margin-bottom: 2rem; }
+    .hero-actions { display: flex; gap: 1rem; justify-content: center; flex-wrap: wrap; }
+    .btn-hero {
+      padding: 0.8rem 2rem; border-radius: 10px; font-size: 0.95rem;
+      font-weight: 700; cursor: pointer; text-decoration: none; transition: all 0.2s;
+      border: none;
+    }
+    .btn-hero.primary {
+      background: linear-gradient(135deg, var(--accent), var(--accent2)); color: #000;
+    }
+    .btn-hero.primary:hover { filter: brightness(1.1); transform: translateY(-2px); }
+    .btn-hero.ghost {
+      background: transparent; border: 1px solid var(--border); color: var(--text);
+    }
+    .btn-hero.ghost:hover { border-color: var(--accent); color: var(--accent); }
+
+    /* PRÓXIMAMENTE */
+    .coming-soon {
+      max-width: 900px; margin: 0 auto 5rem; padding: 0 2rem; text-align: center;
+    }
+    .coming-soon-grid {
+      display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+      gap: 1rem; margin-top: 2rem;
+    }
+    .feature-card {
+      background: var(--surface); border: 1px solid var(--border);
+      border-radius: var(--radius); padding: 1.5rem;
+      transition: border-color 0.2s;
+    }
+    .feature-card:hover { border-color: rgba(240,165,0,0.3); }
+    .feature-icon { font-size: 2rem; margin-bottom: 0.75rem; }
+    .feature-title {
+      font-family: 'Syne', sans-serif; font-size: 0.95rem;
+      font-weight: 700; margin-bottom: 0.4rem;
+    }
+    .feature-desc { font-size: 0.83rem; color: var(--muted); line-height: 1.5; }
+    .section-label {
+      font-family: 'Syne', sans-serif; font-size: 0.75rem; font-weight: 700;
+      text-transform: uppercase; letter-spacing: 1.5px; color: var(--accent);
+      margin-bottom: 0.5rem;
+    }
+    .section-title {
+      font-family: 'Syne', sans-serif; font-size: 1.8rem; font-weight: 800;
+      margin-bottom: 0.75rem;
+    }
+    .section-sub { color: var(--muted); font-size: 0.9rem; }
+  </style>
+</head>
+<body>
+
+<!-- NAVBAR -->
+<nav>
+  <div class="logo">Chuqui<span>Web</span></div>
+  <div class="nav-right">
+    {% if usuario_nombre %}
+      <span class="nav-user">Hola, <strong>{{ usuario_nombre }}</strong></span>
+      <a href="/logout" class="btn-nav">Cerrar sesión</a>
+    {% else %}
+      <a href="/login" class="btn-nav primary">Iniciar Sesión</a>
+    {% endif %}
+  </div>
+</nav>
+
+<!-- HERO -->
+<div class="hero">
+  <div class="hero-label">🇧🇴 Hecho para Bolivia</div>
+  <h1>El marketplace de <span>importadoras</span> más grande del país</h1>
+  <p>
+    Encuentra productos importados de todo el mundo directamente
+    desde las mejores importadoras de Bolivia. Compara precios,
+    descubre ofertas y compra con confianza.
+  </p>
+  <div class="hero-actions">
+    <a href="#tiendas" class="btn-hero primary">🛒 Explorar Tiendas</a>
+    <a href="#categorias" class="btn-hero ghost">Ver Categorías</a>
+  </div>
+</div>
+
+<!-- PRÓXIMAMENTE -->
+<div class="coming-soon" id="tiendas">
+  <div class="section-label">Plataforma</div>
+  <div class="section-title">Próximamente disponible</div>
+  <p class="section-sub">
+    Estamos construyendo la mejor experiencia de compra. Mientras tanto,
+    aquí un vistazo de lo que encontrarás.
+  </p>
+
+  <div class="coming-soon-grid">
+    <div class="feature-card">
+      <div class="feature-icon">🏪</div>
+      <div class="feature-title">Tiendas por Subdominio</div>
+      <div class="feature-desc">Cada importadora tendrá su propia sección personalizada con catálogo y ofertas.</div>
+    </div>
+    <div class="feature-card">
+      <div class="feature-icon">📦</div>
+      <div class="feature-title">Catálogo de Productos</div>
+      <div class="feature-desc">Miles de productos importados organizados por categoría y país de origen.</div>
+    </div>
+    <div class="feature-card">
+      <div class="feature-icon">🔍</div>
+      <div class="feature-title">Búsqueda Avanzada</div>
+      <div class="feature-desc">Filtra por precio, categoría, importadora y disponibilidad en tiempo real.</div>
+    </div>
+    <div class="feature-card">
+      <div class="feature-icon">🛒</div>
+      <div class="feature-title">Carrito de Compras</div>
+      <div class="feature-desc">Agrega productos de distintas tiendas y gestiona tus pedidos fácilmente.</div>
+    </div>
+  </div>
+</div>
+
+</body>
+</html>
